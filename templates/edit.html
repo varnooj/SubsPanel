@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>ادیت</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container" style="max-width:980px">
+    <div class="topbar">
+      <div>
+        <h1 class="title">ادیت سابسکریپشن</h1>
+        <div class="subtle">تغییرات را اعمال کن و ذخیره بزن</div>
+      </div>
+      <a class="btn btn-ghost" href="/admin">بازگشت</a>
+    </div>
+
+    <div class="card">
+      <form method="post" action="/admin/update">
+        <input type="hidden" name="sub_id" value="{{sub['id']}}" />
+
+        <label class="subtle">نام</label>
+        <input class="input" name="name" value="{{sub['name']}}" required />
+
+        <div style="height:8px"></div>
+        <label class="subtle">متن کانفیگ‌ها</label>
+        <textarea class="textarea" name="content" required>{{sub["content"]}}</textarea>
+
+        <div class="row" style="justify-content:flex-start;margin-top:10px">
+          <button class="btn btn-primary" type="submit">ذخیره</button>
+          <a class="btn" href="/admin">انصراف</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

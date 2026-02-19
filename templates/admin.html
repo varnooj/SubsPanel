@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>پنل</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+
+    <div class="topbar">
+      <div>
+        <h1 class="title">پنل مدیریت سابسکریپشن‌ها</h1>
+        <div class="subtle">ایجاد، ویرایش، غیرفعال‌سازی و مدیریت لینک‌ها</div>
+      </div>
+
+      <form method="post" action="/logout">
+        <button class="btn btn-ghost" type="submit">خروج</button>
+      </form>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>ایجاد لینک سابسکریپشن</h3>
+        <div class="row">
+          <a class="btn btn-primary" href="/admin/new">ایجاد جدید</a>
+          <span class="subtle">نام + متن کانفیگ‌ها را paste کن</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h3 style="margin:0">لیست لینک‌های سابسکریپشن</h3>
+          <span class="subtle">{{ subs|length }} مورد</span>
+        </div>
+
+        <hr class="sep">
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="min-width:180px">نام</th>
+                <th style="min-width:120px">وضعیت</th>
+                <th>URL</th>
+                <th style="min-width:360px">عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in subs %}
+              {% set url = base_url ~ '/s/' ~ s['token'] %}
+              <tr>
+                <td><b>{{s["name"]}}</b></td>
+                <td>
+                  {% if s["is_active"] == 1 %}
+                    <span class="badge badge-ok">فعال</span>
+                  {% else %}
+                    <span class="badge badge-off">غیرفعال</span>
+                  {% endif %}
+                </td>
+		<td>
+		  {% set url_b64 = base_url ~ '/s/' ~ s['token'] %}
+		  {% set url_raw = base_url ~ '/s/' ~ s['token'] ~ '?b64=0' %}
+
+		  <div class="urlbox">
+		    <span class="urltag">b64</span>
+		    <span class="urltext" id="urlb64-{{s['id']}}">{{url_b64}}</span>
+		    <button class="copyicon" type="button" title="کپی لینک" onclick="copyById('urlb64-{{s['id']}}')">
+		      <!-- copy icon -->
+		      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+		        <path d="M9 9h10v10H9V9Z" stroke="currentColor" stroke-width="2" />
+		        <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="2"/>
+		      </svg>
+		    </button>
+		  </div>
+
+		  <div style="height:10px"></div>
+
+		  <div class="urlbox">
+		    <span class="urltag">raw</span>
+		    <span class="urltext" id="urlraw-{{s['id']}}">{{url_raw}}</span>
+		    <button class="copyicon" type="button" title="کپی لینک" onclick="copyById('urlraw-{{s['id']}}')">
+		      <!-- copy icon -->
+		      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+		        <path d="M9 9h10v10H9V9Z" stroke="currentColor" stroke-width="2" />
+		        <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="2"/>
+		      </svg>
+		    </button>
+		  </div>
+		</td>
+                <td>
+                  <div class="actions">
+                    <a class="btn" href="/admin/edit/{{s['id']}}">ويرايش</a>
+
+                    <form method="post" action="/admin/toggle">
+                      <input type="hidden" name="sub_id" value="{{s['id']}}">
+                      <button class="btn" type="submit">
+                        {% if s["is_active"] == 1 %}غیرفعال‌سازی{% else %}فعالسازي{% endif %}
+                      </button>
+                    </form>
+
+                    <form method="post" action="/admin/rotate" onsubmit="return confirm('لینک تغییر کند؟ لینک قبلی از کار می‌افتد.');">
+                      <input type="hidden" name="sub_id" value="{{s['id']}}">
+                      <button class="btn" type="submit">تعویض URL</button>
+                    </form>
+
+                    <form method="post" action="/admin/delete" onsubmit="return confirm('حذف شود؟');">
+                      <input type="hidden" name="sub_id" value="{{s['id']}}">
+                      <button class="btn btn-danger" type="submit">حذف</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+              {% if subs|length == 0 %}
+              <tr><td colspan="4" class="subtle">هنوز چیزی ساخته نشده.</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast">کپی شد ✅</div>
+<script>
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg || 'کپی شد ✅';
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 1200);
+  }
+
+  async function copyById(elementId){
+    const el = document.getElementById(elementId);
+    const text = el.innerText.trim();
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('کپی شد ✅');
+    } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('کپی شد ✅');
+    }
+  }
+</script>
+
+</body>
+</html>

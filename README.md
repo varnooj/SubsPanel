@@ -1,0 +1,3 @@
+# SubPanel
+
+See install.sh

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>ورود</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container" style="max-width:520px">
+    <div class="card">
+      <div class="topbar" style="margin-bottom:10px">
+        <h1 class="title" style="font-size:18px;margin:0">ورود ادمین</h1>
+        <span class="subtle">پنل مدیریت</span>
+      </div>
+
+      {% if err %}
+        <div class="card" style="border-color:#fecaca;background:#fff1f2;box-shadow:none">
+          <b style="color:#b91c1c">خطا:</b> {{err}}
+        </div>
+        <div style="height:10px"></div>
+      {% endif %}
+
+      <form method="post" action="/login">
+        <input class="input" name="username" placeholder="نام کاربری" required />
+        <input class="input" name="password" type="password" placeholder="رمز عبور" required />
+        <button class="btn btn-primary" type="submit" style="width:100%">ورود</button>
+      </form>
+
+      <div class="subtle" style="margin-top:10px">
+        برای امنیت، از پسورد قوی استفاده کن.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
