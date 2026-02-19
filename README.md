@@ -18,6 +18,10 @@
   - **b64**: `/s/<token>` (پیش‌فرض مناسب کلاینت‌ها)
   - **raw**: `/s/<token>?b64=0`
 - نصب خودکار روی Ubuntu با Nginx + HTTPS (Let’s Encrypt)
+<<<<<<< HEAD
+=======
+- امکان اجرای پنل روی **پورت HTTPS دلخواه** (مثلاً 8443 / 2053 / 2083 / 2087 / 2096)
+>>>>>>> bd91ad1 (Fix installer: ssl first-run + rate-limit file + custom ports + renew docs)
 
 ---
 
@@ -25,14 +29,52 @@
 
 - Ubuntu (ترجیحاً 22.04/24.04)
 - یک دامنه که A-record آن روی IP سرور ست شده باشد  
+<<<<<<< HEAD
   مثال: `blog.example.com -> YOUR_SERVER_IP`
 - پورت‌های باز روی فایروال/پنل سرور:
   - `80` (برای گرفتن SSL)
   - `443` (برای دسترسی HTTPS)
+=======
+  مثال: `sub.example.com -> YOUR_SERVER_IP`
+- پورت‌های باز روی فایروال/پنل سرور:
+  - `80` (برای گرفتن و تمدید SSL)
+  - `HTTPS_PORT` (مثلاً `8443`)
+>>>>>>> bd91ad1 (Fix installer: ssl first-run + rate-limit file + custom ports + renew docs)
 
 > اگر DNS درست نباشد یا پورت 80 بسته باشد، گرفتن گواهی SSL با certbot شکست می‌خورد.
 
 ---
+<<<<<<< HEAD
+=======
+## دستورات کاربردی
+systemctl status subpanel --no-pager
+systemctl restart subpanel
+journalctl -u subpanel -n 200 --no-pager
+
+## کانفیگ Nginx:
+
+/etc/nginx/sites-available/subpanel
+
+/etc/nginx/sites-enabled/subpanel
+
+##بعد از نصب
+
+صفحه ورود:
+https://YOUR_DOMAIN:HTTPS_PORT/login
+
+پنل ادمین:
+https://YOUR_DOMAIN:HTTPS_PORT/admin
+
+لینک‌های سابسکریپشن
+
+لینک اصلی (b64):
+https://YOUR_DOMAIN:HTTPS_PORT/s/<token>
+
+لینک خام (raw):
+https://YOUR_DOMAIN:HTTPS_PORT/s/<token>?b64=0
+
+
+>>>>>>> bd91ad1 (Fix installer: ssl first-run + rate-limit file + custom ports + renew docs)
 
 ## نصب سریع (One-liner)
 
