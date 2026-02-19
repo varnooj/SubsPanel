@@ -142,7 +142,7 @@ install_all() {
 
   echo "=== SubsPanel Installer ==="
 
-  read -rp "Domain (e.g. blog.example.com): " DOMAIN
+  read -rp "Domain (e.g. sub.example.com): " DOMAIN
   [[ -z "${DOMAIN}" ]] && echo "[-] Domain is required." && exit 1
 
   read -rp "Admin username: " ADMIN_USER

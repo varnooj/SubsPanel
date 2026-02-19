@@ -26,7 +26,7 @@
 
 - Ubuntu (ترجیحاً 22.04/24.04)
 - یک دامنه که A-record آن روی IP سرور ست شده باشد  
-  مثال: `blog.example.com -> YOUR_SERVER_IP`
+  مثال: `sub.example.com -> YOUR_SERVER_IP`
 - پورت‌های باز روی فایروال/پنل سرور:
   - `80` (برای گرفتن و تمدید SSL)
   - `HTTPS_PORT` (مثلاً `8443`)
@@ -64,4 +64,5 @@ https://YOUR_DOMAIN:HTTPS_PORT/s/<token>?b64=0
 روی سرور با کاربر root اجرا کنید:
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/varnooj/SubsPanel/main/subpanel/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/varnooj/SubsPanel/main/install.sh)
+
