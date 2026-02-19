@@ -171,10 +171,26 @@ PY
   echo "[+] Creating app directory..."
   mkdir -p "$APP_DIR/templates" "$APP_DIR/static"
 
-  echo "[+] Copying project files (from repo)..."
-  cp -f ./app.py "$APP_DIR/app.py"
-  cp -f ./templates/*.html "$APP_DIR/templates/"
-  cp -f ./static/style.css "$APP_DIR/static/style.css"
+  echo "[+] Copying project files..."
+
+SRC_DIR="$(pwd)"
+
+if [[ ! -f "$SRC_DIR/app.py" ]]; then
+  echo "[!] app.py not found in current directory."
+  echo "[+] Downloading repository to /tmp/subspanel-src ..."
+
+  apt-get update -y
+  apt-get install -y git
+
+  rm -rf /tmp/subspanel-src
+  git clone --depth 1 https://github.com/varnooj/SubsPanel.git /tmp/subspanel-src
+  SRC_DIR="/tmp/subspanel-src"
+fi
+
+cp -f "$SRC_DIR/app.py" "$APP_DIR/app.py"
+cp -f "$SRC_DIR/templates/"*.html "$APP_DIR/templates/"
+cp -f "$SRC_DIR/static/style.css" "$APP_DIR/static/style.css"
+
 
   echo "[+] Setting up venv..."
   python3 -m venv "$APP_DIR/.venv"
