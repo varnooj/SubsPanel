@@ -35,6 +35,30 @@
 
 ---
 
+بعد از نصب
+
+صفحه ورود:
+https://YOUR_DOMAIN:HTTPS_PORT/login
+
+پنل ادمین:
+https://YOUR_DOMAIN:HTTPS_PORT/admin
+
+لینک‌های سابسکریپشن
+
+لینک اصلی (b64):
+https://YOUR_DOMAIN:HTTPS_PORT/s/<token>
+
+لینک خام (raw):
+https://YOUR_DOMAIN:HTTPS_PORT/s/<token>?b64=0
+
+کانفیگ Nginx:
+
+/etc/nginx/sites-available/subpanel
+
+/etc/nginx/sites-enabled/subpanel
+
+
+
 ## نصب سریع (One-liner)
 
 روی سرور با کاربر root اجرا کنید:
