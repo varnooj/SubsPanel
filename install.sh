@@ -166,7 +166,7 @@ PY
 
   echo "[+] Installing packages..."
   apt-get update -y
-  apt-get install -y nginx certbot python3 python3-venv python3-pip
+  apt-get install -y nginx certbot python3-certbot-nginx python3 python3-venv python3-pip
 
   echo "[+] Creating app directory..."
   mkdir -p "$APP_DIR/templates" "$APP_DIR/static"
@@ -258,13 +258,17 @@ EOF
   certbot renew --dry-run || true
 
   echo
-  echo "[✓] Installed successfully!"
-  echo "Login: https://${DOMAIN}:${HTTPS_PORT}/login"
-  echo "Admin: https://${DOMAIN}:${HTTPS_PORT}/admin"
+  echo "========================================"
+  echo "[✓] SubsPanel installed successfully!"
+  echo "----------------------------------------"
+  echo "Login URL : https://${DOMAIN}:${HTTPS_PORT}/login"
+  echo "Admin URL : https://${DOMAIN}:${HTTPS_PORT}/admin"
+  echo "----------------------------------------"
+  echo "Manual renew: bash install.sh renew"
+  echo "Service     : systemctl status subpanel --no-pager"
+  echo "========================================"
   echo
-  echo "To renew manually: ${0} renew"
-  echo "Service: systemctl status subpanel"
-  echo "Env file: ${ENV_FILE} (chmod 600)"
+
 }
 
 case "${1:-install}" in
