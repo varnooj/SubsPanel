@@ -294,3 +294,84 @@ input[type="password"].input{
   direction: rtl;
   text-align: right;
 }
+/* ===== QR Modal ===== */
+.modal{
+  position: fixed;
+  inset: 0;
+  background: rgba(17,24,39,.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 999;
+}
+
+.modal.show{ display: flex; }
+
+.modal-card{
+  width: min(520px, 100%);
+  background: #0b1220;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 14px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.modal-title{
+  color:#fff;
+  font-weight: 800;
+}
+
+.iconbtn{
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.06);
+  color: #e5e7eb;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: .15s ease;
+}
+.iconbtn:hover{
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.25);
+}
+
+.modal-body{
+  padding: 14px;
+}
+
+.qr-wrap{
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.qr-img{
+  width: 240px;
+  height: 240px;
+  image-rendering: pixelated;
+}
+
+.qr-url{
+  margin-top: 12px;
+  color: #e5e7eb;
+  font-size: 12px;
+  direction: ltr;
+  word-break: break-all;
+  opacity: .9;
+}
