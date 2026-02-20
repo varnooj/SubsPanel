@@ -195,7 +195,7 @@ cp -f "$SRC_DIR/static/style.css" "$APP_DIR/static/style.css"
   echo "[+] Setting up venv..."
   python3 -m venv "$APP_DIR/.venv"
   "$APP_DIR/.venv/bin/pip" install --upgrade pip
-  "$APP_DIR/.venv/bin/pip" install fastapi uvicorn jinja2 python-multipart itsdangerous
+  "$APP_DIR/.venv/bin/pip" install fastapi uvicorn jinja2 python-multipart itsdangerous qrcode pillow "qrcode[pil]"
 
   echo "[+] Writing env file (NOT committed to git)..."
   cat >"$ENV_FILE" <<EOF
