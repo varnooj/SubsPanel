@@ -3,6 +3,7 @@ import os
 import sqlite3
 import time
 import secrets
+import io
 from fastapi import FastAPI, Request, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
@@ -39,7 +40,7 @@ def init_db():
             is_active INTEGER NOT NULL DEFAULT 1,
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL
-        )
+        );
         """
     )
     conn.commit()
@@ -49,7 +50,7 @@ def init_db():
 init_db()
 
 
-def get_logged_in_user(request: Request):
+def get_session_user(request: Request):
     cookie = request.cookies.get("session")
     if not cookie:
         return None
@@ -60,45 +61,51 @@ def get_logged_in_user(request: Request):
         return None
 
 
-def is_admin(request: Request):
-    return get_logged_in_user(request) == ADMIN_USER
-
-
 def require_admin_or_redirect(request: Request):
-    if not is_admin(request):
+    u = get_session_user(request)
+    if u != ADMIN_USER:
         return RedirectResponse("/login", status_code=303)
     return None
 
 
+def base_url(request: Request) -> str:
+    # Prefer X-Forwarded-* from Nginx (especially when using custom HTTPS port)
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.headers.get("host", request.url.netloc))
+    return f"{proto}://{host}"
+
+
 @app.get("/", include_in_schema=False)
-def root():
-    return RedirectResponse("/admin", status_code=303)
+def root(request: Request):
+    # redirect to admin or login
+    u = get_session_user(request)
+    if u == ADMIN_USER:
+        return RedirectResponse("/admin", status_code=303)
+    return RedirectResponse("/login", status_code=303)
 
 
 @app.get("/login", response_class=HTMLResponse, include_in_schema=False)
 def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request, "err": None})
+    return templates.TemplateResponse("login.html", {"request": request, "error": ""})
 
 
 @app.post("/login", include_in_schema=False)
-def login(
-    request: Request,
-    username: str = Form(...),
-    password: str = Form(...),
-):
+def do_login(request: Request, username: str = Form(...), password: str = Form(...)):
     if username == ADMIN_USER and password == ADMIN_PASS:
         resp = RedirectResponse("/admin", status_code=303)
+        token = serializer.dumps({"u": username, "t": int(time.time())})
         resp.set_cookie(
             "session",
-            serializer.dumps({"u": username, "t": int(time.time())}),
+            token,
             httponly=True,
-            samesite="strict",
-            secure=True,  # پشت HTTPS در nginx امن می‌شود؛ اگر فقط HTTPS داری می‌تونی True کنی
+            samesite="lax",
+            secure=False,  # Nginx TLS terminates; cookie secure still works but keep false for local testing
         )
         return resp
+
     return templates.TemplateResponse(
         "login.html",
-        {"request": request, "err": "نام کاربری یا رمز عبور اشتباه است."},
+        {"request": request, "error": "نام کاربری یا رمز عبور اشتباه است"},
         status_code=401,
     )
 
@@ -117,15 +124,17 @@ def admin_home(request: Request):
         return redir
 
     conn = db()
-    rows = conn.execute(
-        "SELECT * FROM subscriptions ORDER BY id DESC"
-    ).fetchall()
+    subs = conn.execute("SELECT * FROM subscriptions ORDER BY id DESC").fetchall()
     conn.close()
 
-    base_url = f"{request.url.scheme}://{request.url.netloc}"
+    base = base_url(request)
     return templates.TemplateResponse(
         "admin.html",
-        {"request": request, "subs": rows, "base_url": base_url},
+        {
+            "request": request,
+            "subs": subs,
+            "base_url": base,
+        },
     )
 
 
@@ -134,6 +143,7 @@ def admin_new(request: Request):
     redir = require_admin_or_redirect(request)
     if redir:
         return redir
+
     return templates.TemplateResponse("new.html", {"request": request})
 
 
@@ -148,11 +158,12 @@ def admin_create(request: Request, name: str = Form(...), content: str = Form(..
 
     conn = db()
     conn.execute(
-        "INSERT INTO subscriptions (name, token, content, is_active, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?)",
-        (name.strip(), token, content, now, now),
+        "INSERT INTO subscriptions (name, token, content, is_active, created_at, updated_at) VALUES (?,?,?,?,?,?)",
+        (name.strip(), token, content.strip(), 1, now, now),
     )
     conn.commit()
     conn.close()
+
     return RedirectResponse("/admin", status_code=303)
 
 
@@ -163,33 +174,25 @@ def admin_edit(request: Request, sub_id: int):
         return redir
 
     conn = db()
-    row = conn.execute(
-        "SELECT * FROM subscriptions WHERE id=?", (sub_id,)
-    ).fetchone()
+    sub = conn.execute("SELECT * FROM subscriptions WHERE id=?", (sub_id,)).fetchone()
     conn.close()
 
-    if not row:
+    if not sub:
         return RedirectResponse("/admin", status_code=303)
 
-    return templates.TemplateResponse("edit.html", {"request": request, "sub": row})
+    return templates.TemplateResponse("edit.html", {"request": request, "sub": sub})
 
 
 @app.post("/admin/update", include_in_schema=False)
-def admin_update(
-    request: Request,
-    sub_id: int = Form(...),
-    name: str = Form(...),
-    content: str = Form(...),
-):
+def admin_update(request: Request, sub_id: int = Form(...), name: str = Form(...), content: str = Form(...)):
     redir = require_admin_or_redirect(request)
     if redir:
         return redir
 
-    now = int(time.time())
     conn = db()
     conn.execute(
         "UPDATE subscriptions SET name=?, content=?, updated_at=? WHERE id=?",
-        (name.strip(), content, now, sub_id),
+        (name.strip(), content.strip(), int(time.time()), sub_id),
     )
     conn.commit()
     conn.close()
@@ -245,7 +248,20 @@ def admin_rotate(request: Request, sub_id: int = Form(...)):
     return RedirectResponse("/admin", status_code=303)
 
 
-from fastapi import Response
+# --- QR code endpoint (server-side, no external JS) ---
+@app.get("/qr", include_in_schema=False, response_class=Response)
+def qr(url: str):
+    """Return a PNG QR code for the given URL."""
+    import qrcode
+    img = qrcode.make(url)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return Response(
+        content=buf.getvalue(),
+        media_type="image/png",
+        headers={"Cache-Control": "no-store"},
+    )
+
 
 @app.get("/s/{token}", include_in_schema=False)
 def serve_subscription(token: str, b64: int = 1):
@@ -263,7 +279,7 @@ def serve_subscription(token: str, b64: int = 1):
 
     content = row["content"].replace("\r\n", "\n").strip() + "\n"
 
-    # اگر b64=1 (پیش‌فرض) => خروجی base64
+    # b64=1 (default)
     if b64 == 1:
         payload = base64.b64encode(content.encode("utf-8")).decode("ascii")
         return Response(
@@ -275,7 +291,7 @@ def serve_subscription(token: str, b64: int = 1):
             },
         )
 
-    # اگر b64=0 => خروجی خام
+    # raw
     return Response(
         content,
         media_type="text/plain; charset=utf-8",
