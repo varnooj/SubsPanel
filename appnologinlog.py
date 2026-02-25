@@ -4,9 +4,6 @@ import sqlite3
 import time
 import secrets
 import io
-import logging
-from logging.handlers import RotatingFileHandler
-from pathlib import Path
 from fastapi import FastAPI, Request, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
@@ -24,52 +21,6 @@ serializer = URLSafeSerializer(SECRET_KEY, salt="session-v1")
 app = FastAPI()
 templates = Jinja2Templates(directory=os.path.join(APP_DIR, "templates"))
 
-# ===== Login Logger =====
-LOG_DIR = Path(os.getenv("LOG_DIR", "/var/log/subpanel"))
-LOG_FILE = LOG_DIR / "login.log"
-
-def setup_login_logger() -> logging.Logger:
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
-
-    logger = logging.getLogger("subpanel.login")
-    logger.setLevel(logging.INFO)
-
-    # Prevent duplicate handlers on reload/import
-    if not logger.handlers:
-        handler = RotatingFileHandler(
-            LOG_FILE, maxBytes=2_000_000, backupCount=5, encoding="utf-8"
-        )
-        fmt = logging.Formatter(
-            "%(asctime)s | %(levelname)s | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-        handler.setFormatter(fmt)
-        logger.addHandler(handler)
-
-    return logger
-
-login_logger = setup_login_logger()
-
-def get_client_ip(request: Request) -> str:
-    """
-    Prefer X-Forwarded-For (Nginx), then X-Real-IP, fallback to request.client.host
-    """
-    xff = request.headers.get("x-forwarded-for")
-    if xff:
-        return xff.split(",")[0].strip()
-    xri = request.headers.get("x-real-ip")
-    if xri:
-        return xri.strip()
-    if request.client:
-        return request.client.host
-    return "unknown"
-
-def log_login_attempt(request: Request, username: str, ok: bool) -> None:
-    ip = get_client_ip(request)
-    ua = request.headers.get("user-agent", "-")
-    host = request.headers.get("host", "-")
-    result = "SUCCESS" if ok else "FAIL"
-    login_logger.info(f"{result} | user={username} | ip={ip} | host={host} | ua={ua}")
 
 def db():
     conn = sqlite3.connect(DB_PATH)
@@ -138,32 +89,9 @@ def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request, "error": ""})
 
 
-#@app.post("/login", include_in_schema=False)
-#def do_login(request: Request, username: str = Form(...), password: str = Form(...)):
-#    if username == ADMIN_USER and password == ADMIN_PASS:
-#        resp = RedirectResponse("/admin", status_code=303)
-#        token = serializer.dumps({"u": username, "t": int(time.time())})
-#        resp.set_cookie(
-#            "session",
-#            token,
-#            httponly=True,
-#            samesite="lax",
-#            secure=False,  # Nginx TLS terminates; cookie secure still works but keep false for local testing
-#        )
-#        return resp
-
-#    return templates.TemplateResponse(
-#        "login.html",
-#        {"request": request, "error": "نام کاربری یا رمز عبور اشتباه است"},
-#        status_code=401,
-#    )
-
 @app.post("/login", include_in_schema=False)
 def do_login(request: Request, username: str = Form(...), password: str = Form(...)):
-    ok_auth = (username == ADMIN_USER and password == ADMIN_PASS)
-    log_login_attempt(request, username, ok_auth)
-
-    if ok_auth:
+    if username == ADMIN_USER and password == ADMIN_PASS:
         resp = RedirectResponse("/admin", status_code=303)
         token = serializer.dumps({"u": username, "t": int(time.time())})
         resp.set_cookie(
@@ -171,7 +99,7 @@ def do_login(request: Request, username: str = Form(...), password: str = Form(.
             token,
             httponly=True,
             samesite="lax",
-            secure=False,  # اگر فقط HTTPS داری بهتره secure=True بشه (اختیاری)
+            secure=False,  # Nginx TLS terminates; cookie secure still works but keep false for local testing
         )
         return resp
 
@@ -180,6 +108,7 @@ def do_login(request: Request, username: str = Form(...), password: str = Form(.
         {"request": request, "error": "نام کاربری یا رمز عبور اشتباه است"},
         status_code=401,
     )
+
 
 @app.post("/logout", include_in_schema=False)
 def logout():
