@@ -112,6 +112,10 @@ systemctl restart subpanel
 
 journalctl -u subpanel -n 200 --no-pager
 
+لاگ لوگین:
+
+tail -n 200 /var/log/subpanel/login.log
+
 تست سلامت پنل از لوکال:
 
 curl -I http://127.0.0.1:INTERNAL_PORT/login

@@ -120,6 +120,8 @@ EOF
 
   systemctl daemon-reload
   systemctl enable --now subpanel
+  install -d -m 700 /var/log/subpanel
+  install -m 600 -o root -g root /dev/null /var/log/subpanel/login.log
   systemctl restart subpanel
 }
 

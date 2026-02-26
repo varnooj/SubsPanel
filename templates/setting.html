@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>تنظیمات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+
+    <div class="topbar">
+      <div>
+        <h1 class="title">تنظیمات پنل</h1>
+        <div class="subtle">تغییر نام کاربری و/یا رمز عبور ادمین</div>
+      </div>
+
+      <div class="row">
+        <a class="btn btn-ghost" href="/admin">بازگشت</a>
+        <form method="post" action="/logout">
+          <button class="btn btn-ghost" type="submit">خروج</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>تغییر مشخصات ادمین</h3>
+
+        {% if error %}
+          <div class="subtle" style="color:#b91c1c; font-weight:700; margin-bottom:10px">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" action="/admin/settings">
+          <div class="row" style="gap:12px; align-items:flex-start">
+            <div style="flex:1 1 320px">
+              <div class="subtle" style="margin-bottom:6px">نام کاربری فعلی</div>
+              <input class="input" type="text" value="{{ current_user }}" disabled>
+            </div>
+
+            <div style="flex:1 1 320px">
+              <div class="subtle" style="margin-bottom:6px">نام کاربری جدید (اختیاری)</div>
+              <input class="input" type="text" name="new_username" placeholder="مثلاً admin2">
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div class="row" style="gap:12px; align-items:flex-start">
+            <div style="flex:1 1 320px">
+              <div class="subtle" style="margin-bottom:6px">رمز عبور فعلی (ضروری)</div>
+              <input class="input" type="password" name="current_password" required placeholder="Current password">
+            </div>
+
+            <div style="flex:1 1 320px">
+              <div class="subtle" style="margin-bottom:6px">رمز جدید (اختیاری)</div>
+              <input class="input" type="password" name="new_password" placeholder="حداقل ۸ کاراکتر">
+            </div>
+
+            <div style="flex:1 1 320px">
+              <div class="subtle" style="margin-bottom:6px">تکرار رمز جدید</div>
+              <input class="input" type="password" name="new_password2" placeholder="Repeat new password">
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div class="row" style="justify-content:flex-end">
+            <a class="btn" href="/admin">انصراف</a>
+            <button class="btn btn-primary" type="submit">ذخیره تغییرات</button>
+          </div>
+
+          <div class="subtle" style="margin-top:10px">
+            نکته: اگر رمز جدید را خالی بگذارید، فقط نام کاربری (در صورت وارد کردن) تغییر می‌کند.
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
