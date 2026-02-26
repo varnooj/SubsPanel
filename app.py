@@ -65,7 +65,7 @@ def log_login_attempt(request: Request, username: str, ok: bool) -> None:
     login_logger.info(f"{result} | user={username} | ip={ip} | host={host} | ua={ua}")
 
 def db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -148,6 +148,9 @@ def update_admin_credentials(new_username: str, new_password: str | None):
 
 def init_db():
     conn = db()
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS subscriptions (
@@ -265,10 +268,18 @@ def admin_settings_page(request: Request):
     redir = require_admin_or_redirect(request)
     if redir:
         return redir
+
+    # Show success/error messages passed via query string after redirect
+    qp = request.query_params
+    err = qp.get("error", "") or ""
+    success = qp.get("success", "") or ""
+    success_msg = "تغییرات با موفقیت ذخیره شد" if success == "1" else ""
+
     return templates.TemplateResponse(
         "settings.html",
-        {"request": request, "error": "", "success": "", "current_user": get_admin_username()},
+        {"request": request, "error": err, "success": success_msg, "current_user": get_admin_username()},
     )
+
 
 @app.post("/admin/settings", response_class=HTMLResponse, include_in_schema=False)
 def admin_settings_save(
@@ -321,7 +332,7 @@ def admin_settings_save(
     update_admin_credentials(new_username, new_password if change_pass else None)
 
     # Refresh session cookie with new username
-    resp = RedirectResponse("/admin/settings", status_code=303)
+    resp = RedirectResponse("/admin/settings?success=1", status_code=303)
     token = serializer.dumps({"u": new_username, "t": int(time.time())})
     resp.set_cookie(
         "session",

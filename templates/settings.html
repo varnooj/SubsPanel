@@ -31,6 +31,10 @@
           <div class="subtle" style="color:#b91c1c; font-weight:700; margin-bottom:10px">{{ error }}</div>
         {% endif %}
 
+        {% if success %}
+          <div class="subtle" style="color:#047857; font-weight:700; margin-bottom:10px">{{ success }}</div>
+        {% endif %}
+
         <form method="post" action="/admin/settings">
           <div class="row" style="gap:12px; align-items:flex-start">
             <div style="flex:1 1 320px">
